@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Технічні категорії автомобільних доріг України</title>
+<meta name="description" content="Інтерактивна карта технічних категорій автомобільних доріг України з фільтрацією за категоріями, типами та кількістю смуг.">
+
+<!-- Open Graph / Facebook / Telegram -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Технічні категорії автомобільних доріг України">
+<meta property="og:description" content="Інтерактивна карта технічних категорій автомобільних доріг України з фільтрацією за категоріями, типами та кількістю смуг.">
+<meta property="og:image" content="./preview.png">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Технічні категорії автомобільних доріг України">
+<meta name="twitter:description" content="Інтерактивна карта технічних категорій автомобільних доріг України з фільтрацією за категоріями, типами та кількістю смуг.">
+<meta name="twitter:image" content="./preview.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<style>
+:root{--bg:#fff;--text:#111;--muted:#6f6f6f;--border:#d8d8d8;--soft:#f4f4f4;--panel:340px}
+*{box-sizing:border-box}
+html,body,#map{width:100%;height:100%;margin:0}
+body{overflow:hidden;font-family:Inter,system-ui,sans-serif;background:#eee;color:var(--text)}
+button,input{font:inherit}
+#map{position:fixed;inset:0}
+.map-title{position:fixed;z-index:850;top:14px;left:50%;transform:translateX(-50%);max-width:calc(100vw - 110px);font-size:16px;font-weight:600;text-align:center;white-space:nowrap;pointer-events:none;user-select:none;color:#111;text-shadow:0 1px #fff,1px 0 #fff,0 -1px #fff,-1px 0 #fff}
+.panel{position:fixed;z-index:1000;top:12px;bottom:12px;left:12px;width:min(var(--panel),calc(100vw - 24px));display:flex;flex-direction:column;overflow:hidden;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 5px 22px rgba(0,0,0,.13);transition:width .16s ease,transform .2s ease}
+.panel.collapsed{width:48px}
+.panel-head{height:47px;display:flex;align-items:center;gap:8px;padding:0 7px 0 14px;border-bottom:1px solid var(--border);flex:0 0 47px}
+.panel-title{flex:1;min-width:0;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.panel.collapsed .panel-head{padding:0;justify-content:center}
+.panel.collapsed .panel-title,.panel.collapsed .panel-body{display:none}
+.collapsed-title{display:none;position:absolute;top:58px;bottom:12px;left:50%;transform:translateX(-50%);writing-mode:vertical-rl;text-orientation:mixed;font-size:12px;font-weight:600;line-height:1;letter-spacing:.02em;pointer-events:none;user-select:none;color:#111}
+.panel.collapsed .collapsed-title{display:block}
+.icon-btn,.search-clear,.popup-close,.mobile-btn{display:grid;place-items:center;padding:0;border:0;background:transparent;color:#111;cursor:pointer}
+.icon-btn{width:34px;height:34px;border-radius:7px;flex:0 0 34px}
+.icon-btn:hover,.search-clear:hover,.popup-close:hover{background:var(--soft)}
+svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.panel-body{min-height:0;flex:1;display:flex;flex-direction:column}
+.filters-accordion{flex:0 0 auto;display:flex;flex-direction:column;border-bottom:1px solid var(--border);background:#fff}
+.filters-toggle{width:100%;height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border:0;background:#fafafa;border-bottom:1px solid #ededed;color:#111;font-size:12px;font-weight:600;cursor:pointer;user-select:none;transition:background .15s}
+.filters-toggle:hover{background:#f2f2f2}
+.filters-toggle-label{display:inline-flex;align-items:center;gap:7px}
+.filters-toggle-label svg{width:14px;height:14px;stroke-width:2;color:#555}
+.filters-chevron{width:15px;height:15px;stroke-width:2;color:#666;transition:transform .2s ease}
+.filters-accordion.collapsed .filters{display:none}
+.filters-accordion.collapsed .filters-chevron{transform:rotate(-90deg)}
+.filters-accordion.collapsed .filters-toggle{border-bottom:0}
+.filters{flex:0 1 auto;max-height:min(52vh,480px);overflow-y:auto;padding:12px;scrollbar-width:thin}
+.search{position:relative;margin-bottom:13px}
+.search input{width:100%;height:36px;padding:0 36px 0 11px;border:1px solid #d0d0d0;border-radius:7px;outline:0;font-size:13px;color:#111;background:#fff;transition:border-color .15s ease}
+.search input:hover{border-color:#aaa}
+.search input:focus{border-color:#111}
+.search input::placeholder{color:#888}
+.search-clear{position:absolute;right:3px;top:3px;width:32px;height:32px;border-radius:6px;display:none}
+.search-clear.show{display:grid}
+.group{margin:0 0 13px;padding:0;border:0}
+.group legend{margin-bottom:7px;padding:0;font-size:12px;font-weight:600;color:#333}
+.legend-with-icon{display:inline-flex;align-items:center;gap:5px}
+.legend-with-icon svg{width:14px;height:14px;stroke-width:1.8;transform:rotate(90deg)}
+.checks{display:flex;flex-wrap:wrap;align-items:center;gap:7px 14px}
+.checks.types{display:flex;flex-wrap:wrap}
+.checks.sources{display:flex;flex-direction:column;align-items:stretch;gap:6px}
+.checks.sources .check{align-items:flex-start}
+.checks.sources .check input{margin-top:2px}
+.checks.sources .check span{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.3}
+.check{display:flex;align-items:center;gap:7px;min-width:0;font-size:12px;line-height:1.25;cursor:pointer;user-select:none}
+.check input{width:15px;height:15px;flex:0 0 15px;margin:0;accent-color:#111}
+.check span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.range-container{display:flex;flex-direction:column;gap:7px;padding:2px 0}
+.range-values{display:flex;align-items:center;justify-content:space-between}
+.range-badge{display:inline-flex;align-items:center;justify-content:center;min-width:44px;padding:2px 7px;border-radius:6px;border:1px solid #d0d0d0;background:#fbfbfb;color:#111;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
+.range-sep{font-size:11px;color:#888;user-select:none}
+.range-slider{position:relative;width:100%;height:22px;display:flex;align-items:center;touch-action:none}
+.range-track{position:absolute;left:0;right:0;height:4px;border-radius:2px;background:#e5e7eb}
+.range-highlight{position:absolute;height:4px;border-radius:2px;background:#111;left:0;right:0}
+.range-slider input[type="range"]{
+ position:absolute;
+ left:0;
+ top:0;
+ width:100%;
+ height:100%;
+ margin:0;
+ padding:0;
+ background:transparent;
+ pointer-events:none;
+ -webkit-appearance:none;
+ appearance:none;
+ outline:none;
+}
+.range-slider input[type="range"]::-webkit-slider-thumb{
+ -webkit-appearance:none;
+ appearance:none;
+ width:16px;
+ height:16px;
+ border-radius:50%;
+ background:#fff;
+ border:2px solid #111;
+ box-shadow:0 1px 4px rgba(0,0,0,.22);
+ cursor:pointer;
+ pointer-events:auto;
+ transition:transform .1s ease,background-color .1s ease;
+}
+.range-slider input[type="range"]::-webkit-slider-thumb:hover{
+ transform:scale(1.18);
+ border-color:#000;
+}
+.range-slider input[type="range"]::-webkit-slider-thumb:active{
+ transform:scale(1.22);
+ background:#111;
+}
+.range-slider input[type="range"]::-moz-range-thumb{
+ width:16px;
+ height:16px;
+ border-radius:50%;
+ background:#fff;
+ border:2px solid #111;
+ box-shadow:0 1px 4px rgba(0,0,0,.22);
+ cursor:pointer;
+ pointer-events:auto;
+}
+.range-slider input[type="range"]::-moz-range-thumb:hover{
+ transform:scale(1.18);
+}
+.range-slider input[type="range"]::-moz-range-thumb:active{
+ transform:scale(1.22);
+ background:#111;
+}
+.range-nodate{font-size:11px;color:#555;margin-top:2px}
+.reset{width:100%;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid #d0d0d0;border-radius:7px;background:#fff;color:#111;font-size:12px;font-weight:500;cursor:pointer;transition:background .15s ease,border-color .15s ease}
+.reset:hover{background:#f5f5f5;border-color:#aaa}
+.list-wrap{min-height:0;flex:1;display:flex;flex-direction:column}
+.panel-footer{flex:0 0 auto;display:grid;gap:6px;padding:8px;border-top:1px solid var(--border);background:#fff}
+.panel-link{height:36px;display:flex;align-items:center;gap:8px;min-width:0;padding:0 10px;border:1px solid #d0d0d0;border-radius:7px;background:#fff;color:#111;text-decoration:none;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden}
+.panel-link:hover{background:#f5f5f5;border-color:#aaa}
+.panel-link svg{width:16px;height:16px;flex:0 0 16px}
+.panel-link span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list-head{display:flex;justify-content:space-between;gap:10px;padding:10px 12px 8px;border-bottom:1px solid #ededed;color:#555;font-size:11px}
+.road-list{min-height:0;flex:1;overflow-y:auto;margin:0;padding:0;list-style:none;scrollbar-width:thin;scroll-behavior:auto}
+.road-item{width:100%;display:block;padding:9px 12px;border:0;border-bottom:1px solid #eee;background:#fff;text-align:left;color:#111;cursor:pointer}
+.road-item:hover{background:#f5f5f5}
+.road-item.is-selected{background:#e8e8e8}
+.road-item-top{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:3px}
+.road-code{flex:0 0 auto;font-size:12px;font-weight:600}
+.road-badges{min-width:0;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.road-badge{height:19px;display:inline-flex;align-items:center;justify-content:center;gap:3px;padding:0 6px;border-radius:999px;font-size:10px;font-weight:600;line-height:1;white-space:nowrap}
+.road-badge.category{color:#fff}
+.road-badge.lanes{border:1px solid #c8c8c8;background:#fff;color:#333}
+.road-badge.lanes svg{width:11px;height:11px;stroke-width:1.8;transform:rotate(90deg)}
+.road-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#666;font-size:11px}
+.empty{padding:18px 12px;color:#777;font-size:12px;line-height:1.4}
+.mobile-btn{position:fixed;z-index:1100;left:16px;bottom:max(16px,env(safe-area-inset-bottom));width:48px;height:48px;border:1px solid #c9c9c9;border-radius:50%;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.18);display:none}
+.maplibregl-popup{max-width:min(380px,calc(100vw - 32px))!important;font-family:Inter,system-ui,sans-serif}
+.maplibregl-popup-content{padding:0;border:1px solid #d0d0d0;border-radius:9px;box-shadow:0 4px 18px rgba(0,0,0,.14);background:#fff;font-family:Inter,system-ui,sans-serif}
+.maplibregl-popup-tip{border-top-color:#fff}
+.road-popup{min-width:240px;max-width:min(380px,calc(100vw - 32px));color:#111;font-size:12px;line-height:1.45;padding:12px 14px;font-family:Inter,system-ui,sans-serif}
+.popup-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px}
+.popup-title{flex:1;min-width:0;margin-top:1px;font-size:13px;font-weight:600;line-height:1.3}
+.popup-close{width:24px;height:24px;flex:0 0 24px;margin:-4px -4px 0 0;border-radius:5px;color:#555}
+.popup-close svg{width:15px;height:15px}
+.popup-badges{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.road-badge.length{border:1px solid #d4d4d4;background:#f7f7f7;color:#333}
+.popup-row{display:grid;grid-template-columns:82px 1fr;gap:10px;margin-top:3px}
+.popup-label{color:#747474}
+.popup-value{text-align:left;font-weight:500}
+.popup-source-row{align-items:flex-start}
+.popup-source-value{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+.popup-source-badges{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:2px}
+.road-badge.source{height:auto;min-height:19px;padding:2px 7px;border-radius:6px;border:1px solid #d0d7de;background:#f6f8fa;color:#24292f;font-size:10px;font-weight:600;line-height:1.25;white-space:normal;word-break:break-word}
+.road-badge.date{height:19px;padding:0 6px;border-radius:999px;border:1px solid #d4d4d4;background:#fff;color:#555;font-size:10px;font-weight:500;line-height:1;white-space:nowrap}
+.road-badge.date svg{width:10px;height:10px;stroke-width:1.8;color:#777}
+.popup-source-doc{font-size:11px;font-weight:400;line-height:1.35;color:#475569;font-style:italic;margin-top:3px;word-break:break-word}
+.popup-source-btn{height:36px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border:1px solid #d0d0d0;border-radius:7px;background:#fff;color:#111!important;text-decoration:none;font-size:12px;font-weight:500;transition:background .15s ease,border-color .15s ease;margin-top:8px}
+.popup-source-btn:hover{background:#f5f5f5;border-color:#aaa;color:#111!important}
+.popup-source-btn svg{width:15px;height:15px;stroke-width:2;flex:0 0 15px;color:#111}
+.maplibregl-ctrl-top-right{top:12px;right:12px}
+@media(max-width:760px){
+ .map-title{top:11px;max-width:calc(100vw - 92px);font-size:13px;white-space:normal}
+ .panel{top:auto;right:8px;bottom:8px;left:8px;width:auto;height:min(72vh,610px);max-height:calc(100dvh - 70px);border-radius:12px;transform:translateY(calc(100% + 18px))}
+ .panel.mobile-open{transform:translateY(0)}
+ .panel.collapsed{width:auto}
+ .panel.collapsed .panel-title{display:block}
+ .panel.collapsed .panel-body{display:flex}
+ .panel.collapsed .collapsed-title{display:none}
+ .filters{max-height:min(43vh,365px)}
+ .mobile-btn{display:grid}
+}
+</style>
+</head>
+<body>
+<div id="map" aria-label="Карта технічних категорій автомобільних доріг України"></div>
+<div class="map-title" id="map-title">Технічні категорії автомобільних доріг України</div>
+
+<aside class="panel" id="panel" aria-label="Фільтри та список доріг">
+  <div class="panel-head">
+    <div class="panel-title">Дороги</div>
+    <button class="icon-btn" id="panel-toggle" type="button" aria-label="Згорнути меню" title="Згорнути меню">
+      <svg viewBox="0 0 24 24"><path id="toggle-path" d="M15 18l-6-6 6-6"></path></svg>
+    </button>
+  </div>
+
+  <div class="collapsed-title" aria-hidden="true">Дороги</div>
+
+  <div class="panel-body">
+    <div class="filters-accordion" id="filters-accordion">
+      <button class="filters-toggle" id="filters-toggle" type="button" aria-expanded="true" aria-controls="filters" title="Згорнути / розгорнути фільтри">
+        <span class="filters-toggle-label">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"></path></svg>
+          <span>Фільтри</span>
+        </span>
+        <svg class="filters-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+      </button>
+
+      <div class="filters" id="filters">
+        <div class="search">
+          <input id="search" type="search" autocomplete="off" placeholder="Пошук за назвою або індексом" aria-label="Пошук дороги">
+          <button class="search-clear" id="search-clear" type="button" aria-label="Очистити пошук" title="Очистити">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+          </button>
+        </div>
+
+        <fieldset class="group">
+          <legend>Тип дороги</legend>
+          <div class="checks types" id="type-filters">
+            <label class="check"><input type="checkbox" data-all checked><span>Усі</span></label>
+            <label class="check"><input type="checkbox" value="international" checked><span>Міжнародна</span></label>
+            <label class="check"><input type="checkbox" value="national" checked><span>Національна</span></label>
+            <label class="check"><input type="checkbox" value="regional" checked><span>Регіональна</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend>Категорія</legend>
+          <div class="checks" id="category-filters"></div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend>
+            <span class="legend-with-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 4v16M17 4v16M12 4v3M12 10v4M12 17v3"></path>
+              </svg>
+              <span>Кількість смуг</span>
+            </span>
+          </legend>
+          <div class="checks" id="lane-filters"></div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend>Джерело даних</legend>
+          <div class="checks sources" id="source-filters"></div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend>
+            <span class="legend-with-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true" style="transform:none">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>Дата джерела</span>
+            </span>
+          </legend>
+          <div class="range-container" id="date-range-filter">
+            <div class="range-values">
+              <span class="range-badge" id="date-min-val">2011</span>
+              <span class="range-sep">—</span>
+              <span class="range-badge" id="date-max-val">2026</span>
+            </div>
+            <div class="range-slider" id="date-range-slider">
+              <div class="range-track"></div>
+              <div class="range-highlight" id="date-highlight"></div>
+              <input type="range" id="date-min" min="2011" max="2026" value="2011" step="1" aria-label="Мінімальний рік">
+              <input type="range" id="date-max" min="2011" max="2026" value="2026" step="1" aria-label="Максимальний рік">
+            </div>
+            <label class="range-nodate check">
+              <input type="checkbox" id="date-nodate" checked>
+              <span>Включати без дати</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <button class="reset" id="reset" type="button">Скинути</button>
+      </div>
+    </div>
+
+    <div class="list-wrap">
+      <div class="list-head"><span>Список доріг</span><span id="road-count">0</span></div>
+      <ul class="road-list" id="road-list"></ul>
+    </div>
+
+    <div class="panel-footer">
+      <a
+        class="panel-link"
+        href="https://github.com/suprun/roads_by_category_ua"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Джерело і структура даних"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14 5h5v5"></path>
+          <path d="M10 14L19 5"></path>
+          <path d="M19 13v6H5V5h6"></path>
+        </svg>
+        <span>Джерело і структура даних</span>
+      </a>
+    </div>
+  </div>
+</aside>
+
+<button class="mobile-btn" id="mobile-btn" type="button" aria-label="Відкрити меню" title="Фільтри та дороги">
+  <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"></path></svg>
+</button>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+const colors={I:"#d73027",II:"#f28e2b",III:"#2f78c4",IV:"#3f9b62",V:"#7c5cbf"};
+const panel=document.getElementById("panel"),toggle=document.getElementById("panel-toggle"),togglePath=document.getElementById("toggle-path"),mobileBtn=document.getElementById("mobile-btn");
+const search=document.getElementById("search"),clearBtn=document.getElementById("search-clear"),resetBtn=document.getElementById("reset");
+const typeBox=document.getElementById("type-filters"),catBox=document.getElementById("category-filters"),laneBox=document.getElementById("lane-filters"),sourceBox=document.getElementById("source-filters");
+const dateMin=document.getElementById("date-min"),dateMax=document.getElementById("date-max");
+const dateMinVal=document.getElementById("date-min-val"),dateMaxVal=document.getElementById("date-max-val");
+const dateHighlight=document.getElementById("date-highlight"),dateSlider=document.getElementById("date-range-slider"),dateNoDate=document.getElementById("date-nodate");
+let dateMinLimit=2011,dateMaxLimit=2026;
+const list=document.getElementById("road-list"),roadCount=document.getElementById("road-count");
+const filtersAccordion=document.getElementById("filters-accordion"),filtersToggle=document.getElementById("filters-toggle");
+let isPopupHovered=false;
+
+const map=new maplibregl.Map({
+ container:"map",
+ dragRotate:false,
+ pitchWithRotate:false,
+ touchPitch:false,
+ maxPitch:0,
+ minPitch:0,
+ style:{
+  version:8,
+  sources:{
+   osm:{
+    type:"raster",
+    tiles:[
+     "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+    ],
+    tileSize:256,
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
+   }
+  },
+  layers:[
+   {
+    id:"osm-tiles",
+    type:"raster",
+    source:"osm",
+    minzoom:0,
+    maxzoom:19
+   }
+  ]
+ },
+ center:[31.2,49],
+ zoom:6
+});
+
+map.dragRotate.disable();
+map.touchPitch.disable();
+if(map.touchZoomRotate){
+ map.touchZoomRotate.disableRotation();
+}
+
+const nav=new maplibregl.NavigationControl({showCompass:false});
+map.addControl(nav,"top-right");
+
+let allFeatures=[];
+let currentFeatures=[];
+let featuresMap=new Map();
+let selectedRoadKey=null;
+let clickedActiveFeatureId=null;
+let mapSelectedRoadKey=null;
+
+let activePopup=null;
+let pinned=false;
+let activePopupFeatureId=null;
+let hoveredFeatureId=null;
+let isLayerClick=false;
+
+const roadListItems=new Map();
+const isMobile=()=>matchMedia("(max-width:760px)").matches;
+
+function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function val(v){return v===null||v===undefined||v===""?"—":esc(v)}
+function code(p={}){return p.current_road_code||p.road_code||"Дорога"}
+function name(p={}){return p.current_road_name||p.road_name||""}
+function key(p={}){return `${code(p)}|||${name(p)}`}
+function type(p={}){const c=String(code(p)).trim().toUpperCase()[0];if(c==="М"||c==="M")return"international";if(c==="Н"||c==="H"||c==="N")return"national";if(c==="Р"||c==="P"||c==="R")return"regional";return"other"}
+
+function laneIcon(){
+ return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M17 4v16M12 4v3M12 10v4M12 17v3"></path></svg>';
+}
+function categoryColor(category){return colors[category]||"#666"}
+
+function extendBounds(bounds,coord){
+ if(!bounds)return[coord[0],coord[1],coord[0],coord[1]];
+ return[
+  Math.min(bounds[0],coord[0]),
+  Math.min(bounds[1],coord[1]),
+  Math.max(bounds[2],coord[0]),
+  Math.max(bounds[3],coord[1])
+ ];
+}
+
+function computeBounds(geom){
+ let bounds=null;
+ function traverse(c){
+  if(typeof c[0]==="number"){
+   bounds=extendBounds(bounds,c);
+  }else{
+   for(let i=0;i<c.length;i++)traverse(c[i]);
+  }
+ }
+ if(geom&&geom.coordinates)traverse(geom.coordinates);
+ return bounds;
+}
+
+function clearHoverHalo(){
+ hoveredFeatureId=null;
+ if(map.getLayer("roads-hover-halo-outer")){
+  map.setFilter("roads-hover-halo-outer",["==","_id",-1]);
+  map.setFilter("roads-hover-halo-inner",["==","_id",-1]);
+ }
+}
+
+function showHoverHalo(id){
+ hoveredFeatureId=id;
+ if(map.getLayer("roads-hover-halo-outer")){
+  map.setFilter("roads-hover-halo-outer",["==","_id",id]);
+  map.setFilter("roads-hover-halo-inner",["==","_id",id]);
+ }
+}
+
+function clearClickedActiveFeature(){
+ clickedActiveFeatureId=null;
+ if(map.getLayer("roads-clicked-halo-outer")){
+  map.setFilter("roads-clicked-halo-outer",["==","_id",-1]);
+  map.setFilter("roads-clicked-halo-inner",["==","_id",-1]);
+ }
+}
+
+function setClickedActiveFeature(id){
+ clickedActiveFeatureId=id;
+ if(map.getLayer("roads-clicked-halo-outer")){
+  map.setFilter("roads-clicked-halo-outer",["==","_id",id]);
+  map.setFilter("roads-clicked-halo-inner",["==","_id",id]);
+ }
+}
+
+function clearRoadSelection(){
+ selectedRoadKey=null;
+ if(map.getLayer("roads-selected-halo-outer")){
+  map.setFilter("roads-selected-halo-outer",["==","road_key",""]);
+  map.setFilter("roads-selected-halo-inner",["==","road_key",""]);
+ }
+
+ document.querySelectorAll(".road-item.is-selected").forEach(el=>{
+  if(!mapSelectedRoadKey||roadListItems.get(mapSelectedRoadKey)!==el){
+   el.classList.remove("is-selected");
+  }
+ });
+}
+
+function selectRoad(road){
+ clearRoadSelection();
+ selectedRoadKey=road.key;
+ if(map.getLayer("roads-selected-halo-outer")){
+  map.setFilter("roads-selected-halo-outer",["==","road_key",selectedRoadKey]);
+  map.setFilter("roads-selected-halo-inner",["==","road_key",selectedRoadKey]);
+ }
+}
+
+function scrollListItemIntoView(item){
+ if(!item||panel.classList.contains("collapsed")||isMobile()&&!panel.classList.contains("mobile-open"))return;
+
+ const container=list.getBoundingClientRect();
+ const box=item.getBoundingClientRect();
+ const above=box.top<container.top;
+ const below=box.bottom>container.bottom;
+
+ if(above||below){
+  item.scrollIntoView({block:"nearest",behavior:"instant"});
+ }
+}
+
+function clearMapListSelection(){
+ if(!mapSelectedRoadKey)return;
+
+ const item=roadListItems.get(mapSelectedRoadKey);
+ if(item&&mapSelectedRoadKey!==selectedRoadKey){
+  item.classList.remove("is-selected");
+ }
+
+ mapSelectedRoadKey=null;
+}
+
+function selectListItemFromMap(roadKeyValue){
+ clearMapListSelection();
+
+ mapSelectedRoadKey=roadKeyValue;
+ const item=roadListItems.get(roadKeyValue);
+ if(!item)return;
+
+ item.classList.add("is-selected");
+ scrollListItemIntoView(item);
+}
+
+function popupHTML(p={}){
+ const title=name(p)?`${esc(code(p))} — ${esc(name(p))}`:esc(code(p));
+ const pike=p.from&&p.to?`${esc(p.from)}–${esc(p.to)}`:"—";
+ let lanes="—";
+ const totalLanes=p.lanes_total??p.lanes;
+ if(totalLanes!==null&&totalLanes!==undefined&&totalLanes!==""){
+  if(p.lanes_forward!==null&&p.lanes_forward!==undefined&&p.lanes_reverse!==null&&p.lanes_reverse!==undefined){
+   lanes=`${esc(p.lanes_forward)} + ${esc(p.lanes_reverse)} = ${esc(totalLanes)}`;
+  }else{
+   lanes=esc(totalLanes);
+  }
+ }
+ const catBadge=p.category?`<span class="road-badge category" style="background:${categoryColor(p.category)}">Категорія ${esc(p.category)}</span>`:"";
+ const lengthBadge=p.length_km?`<span class="road-badge length">${esc(p.length_km)} км</span>`:"";
+ const statusRow=p.category_status?`<div class="popup-row"><span class="popup-label">Статус</span><span class="popup-value">${val(p.category_status)}</span></div>`:"";
+
+ let sourceBlock="";
+ if(p.source_system||p.source_title||p.source_url||p.source_date){
+  const sysBadge=p.source_system?`<span class="road-badge source">${esc(p.source_system)}</span>`:"";
+  const dateBadge=p.source_date?`
+   <span class="road-badge date">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+    <span>${esc(p.source_date)}</span>
+   </span>`:"";
+  const badges=(sysBadge||dateBadge)?`<div class="popup-source-badges">${sysBadge}${dateBadge}</div>`:"";
+
+  const docTitle=(p.source_title&&p.source_title!==p.source_system)?p.source_title:"";
+  const docElement=docTitle?`<div class="popup-source-doc">${esc(docTitle)}</div>`:"";
+
+  const sbtn=p.source_url?`
+   <a class="popup-source-btn" href="${esc(p.source_url)}" target="_blank" rel="noopener noreferrer" title="Відкрити першоджерело у новій вкладці">
+    <span>Перейти до джерела</span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5"></path><path d="M10 14L19 5"></path><path d="M19 13v6H5V5h6"></path></svg>
+   </a>`:"" ;
+
+  sourceBlock=`
+   <div class="popup-row popup-source-row">
+    <span class="popup-label">Джерело</span>
+    <div class="popup-value popup-source-value">
+     ${badges}
+     ${docElement}
+    </div>
+   </div>
+   ${sbtn}`;
+ }
+
+ return `<div class="road-popup">
+  <div class="popup-head">
+   <div class="popup-title">${title}</div>
+   <button class="popup-close" type="button" aria-label="Закрити" title="Закрити"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+  </div>
+  ${(catBadge||lengthBadge)?`<div class="popup-badges">${catBadge}${lengthBadge}</div>`:""}
+  <div class="popup-row"><span class="popup-label">Область</span><span class="popup-value">${val(p.oblast)}</span></div>
+  <div class="popup-row"><span class="popup-label">Пікетаж</span><span class="popup-value">${pike}</span></div>
+  <div class="popup-row"><span class="popup-label">Смуг руху</span><span class="popup-value">${lanes}</span></div>
+  ${statusRow}
+  ${sourceBlock}
+ </div>`;
+}
+
+function closeActivePopup(){
+ if(activePopup){
+  activePopup.remove();
+  activePopup=null;
+ }
+ pinned=false;
+ isPopupHovered=false;
+ activePopupFeatureId=null;
+
+ if(clickedActiveFeatureId!==null){
+  clearClickedActiveFeature();
+  clearMapListSelection();
+ }
+}
+
+function openRoadPopup(feature,lngLat,isPinned){
+ if(activePopup){
+  activePopup.remove();
+  activePopup=null;
+ }
+
+ pinned=isPinned;
+ activePopupFeatureId=feature.properties._id;
+
+ activePopup=new maplibregl.Popup({
+  closeButton:false,
+  closeOnClick:false,
+  maxWidth:"min(380px,calc(100vw - 32px))",
+  offset:[0,-4]
+ })
+ .setLngLat(lngLat)
+ .setHTML(popupHTML(feature.properties))
+ .addTo(map);
+
+ const el=activePopup.getElement();
+ const btn=el?.querySelector(".popup-close");
+ if(btn){
+  btn.onclick=e=>{
+   e.preventDefault();
+   e.stopPropagation();
+   closeActivePopup();
+  };
+ }
+
+ if(el){
+  el.addEventListener("mouseenter",()=>{
+   isPopupHovered=true;
+  });
+  el.addEventListener("mouseleave",()=>{
+   isPopupHovered=false;
+   if(!pinned){
+    closeActivePopup();
+   }
+  });
+ }
+}
+
+function attachGroup(box){
+ const all=box.querySelector("input[data-all]");
+ const getItems=()=>[...box.querySelectorAll("input:not([data-all])")];
+
+ function syncAllCheckbox(){
+  if(!all)return;
+  const items=getItems();
+  const checkedCount=items.filter(i=>i.checked).length;
+  if(checkedCount===items.length){
+   all.checked=true;
+   all.indeterminate=false;
+  }else if(checkedCount===0){
+   all.checked=false;
+   all.indeterminate=false;
+  }else{
+   all.checked=false;
+   all.indeterminate=true;
+  }
+ }
+
+ if(all){
+  all.addEventListener("change",()=>{
+   const target=all.checked;
+   all.indeterminate=false;
+   getItems().forEach(i=>{i.checked=target;});
+   applyFilters();
+  });
+ }
+
+ box.addEventListener("change",e=>{
+  if(!e.target||e.target===all)return;
+  syncAllCheckbox();
+  applyFilters();
+ });
+
+ syncAllCheckbox();
+}
+
+function createGroup(box,values,label=v=>String(v)){
+ box.innerHTML="";
+ const a=document.createElement("label");a.className="check";a.innerHTML='<input type="checkbox" data-all checked><span>Усі</span>';box.append(a);
+ values.forEach(v=>{const l=document.createElement("label");l.className="check";l.innerHTML=`<input type="checkbox" value="${esc(v)}" checked><span title="${esc(v)}">${esc(label(v))}</span>`;box.append(l)});
+ attachGroup(box);
+}
+
+function selected(box){
+ const all=box.querySelector("input[data-all]"),items=[...box.querySelectorAll("input:not([data-all])")];
+ return{all:!!all?.checked,values:new Set(items.filter(i=>i.checked).map(i=>i.value))}
+}
+
+function getDateFilter(){
+ if(!dateMin||!dateMax)return{minYear:dateMinLimit,maxYear:dateMaxLimit,allowNoDate:true,isFullRange:true};
+ const minYear=parseInt(dateMin.value,10);
+ const maxYear=parseInt(dateMax.value,10);
+ const allowNoDate=!!dateNoDate?.checked;
+ const isFullRange=(minYear===dateMinLimit&&maxYear===dateMaxLimit);
+ return{minYear,maxYear,allowNoDate,isFullRange};
+}
+
+function updateDateSlider(){
+ if(!dateMin||!dateMax||!dateHighlight)return;
+ const min=parseInt(dateMin.value,10);
+ const max=parseInt(dateMax.value,10);
+ const total=dateMaxLimit-dateMinLimit||1;
+ const leftPercent=((min-dateMinLimit)/total)*100;
+ const widthPercent=((max-min)/total)*100;
+ dateHighlight.style.left=`${leftPercent}%`;
+ dateHighlight.style.width=`${widthPercent}%`;
+ if(dateMinVal)dateMinVal.textContent=min;
+ if(dateMaxVal)dateMaxVal.textContent=max;
+}
+
+function initDateSlider(minYear,maxYear){
+ dateMinLimit=minYear;
+ dateMaxLimit=maxYear;
+ if(dateMin){
+  dateMin.min=minYear;
+  dateMin.max=maxYear;
+  dateMin.value=minYear;
+ }
+ if(dateMax){
+  dateMax.min=minYear;
+  dateMax.max=maxYear;
+  dateMax.value=maxYear;
+ }
+ if(dateNoDate)dateNoDate.checked=true;
+ updateDateSlider();
+}
+
+function resetDateFilter(){
+ if(dateMin)dateMin.value=dateMinLimit;
+ if(dateMax)dateMax.value=dateMaxLimit;
+ if(dateNoDate)dateNoDate.checked=true;
+ updateDateSlider();
+}
+
+if(dateMin&&dateMax){
+ dateMin.addEventListener("input",()=>{
+  if(parseInt(dateMin.value,10)>parseInt(dateMax.value,10)){
+   dateMin.value=dateMax.value;
+  }
+  dateMin.style.zIndex=5;
+  dateMax.style.zIndex=4;
+  updateDateSlider();
+  applyFilters();
+ });
+ dateMax.addEventListener("input",()=>{
+  if(parseInt(dateMax.value,10)<parseInt(dateMin.value,10)){
+   dateMax.value=dateMin.value;
+  }
+  dateMax.style.zIndex=5;
+  dateMin.style.zIndex=4;
+  updateDateSlider();
+  applyFilters();
+ });
+ if(dateSlider){
+  dateSlider.addEventListener("pointerdown",e=>{
+   const rect=dateSlider.getBoundingClientRect();
+   const ratio=(e.clientX-rect.left)/rect.width;
+   const val=dateMinLimit+ratio*(dateMaxLimit-dateMinLimit);
+   const distMin=Math.abs(val-parseInt(dateMin.value,10));
+   const distMax=Math.abs(val-parseInt(dateMax.value,10));
+   if(distMin<=distMax){
+    dateMin.style.zIndex=5;
+    dateMax.style.zIndex=4;
+   }else{
+    dateMax.style.zIndex=5;
+    dateMin.style.zIndex=4;
+   }
+  });
+ }
+ if(dateNoDate){
+  dateNoDate.addEventListener("change",()=>applyFilters());
+ }
+}
+
+function matches(f,q=search.value.trim().toLocaleLowerCase("uk-UA"),t=selected(typeBox),c=selected(catBox),l=selected(laneBox),s=selected(sourceBox),df=getDateFilter()){
+ const p=f.properties||{};
+ if(!t.all&&!t.values.has(type(p)))return false;
+ if(!c.all&&!c.values.has(String(p.category??"")))return false;
+ if(!l.all){
+  if(p.lanes_total===null||p.lanes_total===undefined)return false;
+  if(!l.values.has(String(p.lanes_total)))return false;
+ }
+ if(!s.all&&!s.values.has(String(p.source_system??"")))return false;
+ if(!df.isFullRange||!df.allowNoDate){
+  const d=p.source_date;
+  if(!d){
+   if(!df.allowNoDate)return false;
+  }else{
+   const y=parseInt(String(d).slice(0,4),10);
+   if(Number.isFinite(y)){
+    if(y<df.minYear||y>df.maxYear)return false;
+   }else if(!df.allowNoDate){
+    return false;
+   }
+  }
+ }
+ if(q&&!`${code(p)} ${name(p)}`.toLocaleLowerCase("uk-UA").includes(q))return false;
+ return true;
+}
+
+function visibleRoads(features){
+ const m=new Map();
+ features.forEach(f=>{
+  const p=f.properties||{},k=p.road_key;
+  if(!m.has(k))m.set(k,{
+   key:k,
+   code:code(p),
+   name:name(p),
+   features:[],
+   bounds:null,
+   categories:new Set(),
+   lanes:new Set()
+  });
+  const road=m.get(k);
+  road.features.push(f);
+  if(f._bounds){
+   road.bounds=road.bounds?[
+    Math.min(road.bounds[0],f._bounds[0]),
+    Math.min(road.bounds[1],f._bounds[1]),
+    Math.max(road.bounds[2],f._bounds[2]),
+    Math.max(road.bounds[3],f._bounds[3])
+   ]:[...f._bounds];
+  }
+  if(p.category!==null&&p.category!==undefined&&p.category!=="")road.categories.add(String(p.category));
+  if(p.lanes_total!==null&&p.lanes_total!==undefined&&p.lanes_total!=="")road.lanes.add(Number(p.lanes_total));
+ });
+ const order=["I","II","III","IV","V"];
+ return [...m.values()].map(road=>{
+  road.categories=[...road.categories].sort((a,b)=>order.indexOf(a)-order.indexOf(b));
+  road.lanes=[...road.lanes].filter(Number.isFinite).sort((a,b)=>a-b);
+  return road;
+ }).sort((a,b)=>a.code.localeCompare(b.code,"uk",{numeric:true,sensitivity:"base"})||a.name.localeCompare(b.name,"uk"));
+}
+
+function renderList(features){
+ const roads=visibleRoads(features);roadCount.textContent=roads.length;list.innerHTML="";
+ roadListItems.clear();
+ if(!roads.length){const li=document.createElement("li");li.className="empty";li.textContent="За вибраними умовами доріг не знайдено.";list.append(li);return}
+ const frag=document.createDocumentFragment();
+ roads.forEach(r=>{
+  const li=document.createElement("li"),b=document.createElement("button");
+  const categoryBadges=r.categories.map(category=>
+   `<span class="road-badge category" style="background:${categoryColor(category)}">${esc(category)}</span>`
+  ).join("");
+  const laneBadges=r.lanes.map(lanes=>
+   `<span class="road-badge lanes">${laneIcon()}<span>${esc(lanes)}</span></span>`
+  ).join("");
+
+  b.type="button";
+  b.className="road-item"+((selectedRoadKey===r.key||mapSelectedRoadKey===r.key)?" is-selected":"");
+  b.innerHTML=`
+   <span class="road-item-top">
+    <span class="road-code">${esc(r.code)}</span>
+    <span class="road-badges">${categoryBadges}${laneBadges}</span>
+   </span>
+   <span class="road-name">${esc(r.name||"Без назви")}</span>`;
+
+  roadListItems.set(r.key,b);
+
+  b.onclick=()=>{
+   closeActivePopup();
+   clearClickedActiveFeature();
+   clearMapListSelection();
+
+   selectRoad(r);
+   b.classList.add("is-selected");
+
+   if(r.bounds){
+    map.fitBounds([
+     [r.bounds[0],r.bounds[1]],
+     [r.bounds[2],r.bounds[3]]
+    ],{
+     padding:isMobile()?28:48,
+     maxZoom:11
+    });
+   }
+   if(isMobile())setMobile(false);
+  };
+  li.append(b);frag.append(li);
+ });
+ list.append(frag);
+}
+
+function applyFilters(){
+ clearHoverHalo();
+ const q=search.value.trim().toLocaleLowerCase("uk-UA");
+ const t=selected(typeBox),c=selected(catBox),l=selected(laneBox),s=selected(sourceBox),df=getDateFilter();
+ currentFeatures=allFeatures.filter(f=>matches(f,q,t,c,l,s,df));
+
+ const source=map.getSource("roads");
+ if(source){
+  source.setData({
+   type:"FeatureCollection",
+   features:currentFeatures
+  });
+ }
+
+ if(pinned&&!currentFeatures.some(f=>f.properties._id===activePopupFeatureId)){
+  closeActivePopup();
+ }
+ if(clickedActiveFeatureId!==null&&!currentFeatures.some(f=>f.properties._id===clickedActiveFeatureId)){
+  clearClickedActiveFeature();
+ }
+ if(selectedRoadKey&&!currentFeatures.some(f=>f.properties.road_key===selectedRoadKey)){
+  clearRoadSelection();
+ }
+
+ clearBtn.classList.toggle("show",search.value.length>0);
+ renderList(currentFeatures);
+}
+
+function resetGroup(box){
+ box.querySelectorAll('input[type="checkbox"]').forEach(i=>i.checked=true);
+ const all=box.querySelector("input[data-all]");
+ if(all){all.checked=true;all.indeterminate=false;}
+}
+function resetFilters(){search.value="";closeActivePopup();clearClickedActiveFeature();clearMapListSelection();clearRoadSelection();resetGroup(typeBox);resetGroup(catBox);resetGroup(laneBox);resetGroup(sourceBox);resetDateFilter();applyFilters()}
+
+function setDesktop(collapsed){
+ if(isMobile())return;
+ panel.classList.toggle("collapsed",collapsed);
+ togglePath.setAttribute("d",collapsed?"M9 18l6-6-6-6":"M15 18l-6-6 6-6");
+ toggle.title=collapsed?"Розгорнути меню":"Згорнути меню";
+ toggle.setAttribute("aria-label",toggle.title);
+}
+
+function setMobile(open){
+ if(!isMobile())return;
+ panel.classList.toggle("mobile-open",open);
+ togglePath.setAttribute("d",open?"M6 9l6 6 6-6":"M15 18l-6-6 6-6");
+ toggle.title=open?"Закрити меню":"Розгорнути меню";toggle.setAttribute("aria-label",toggle.title);
+ mobileBtn.title=open?"Закрити меню":"Фільтри та дороги";
+ mobileBtn.setAttribute("aria-label",open?"Закрити меню":"Відкрити меню");
+}
+
+function setFiltersCollapsed(collapsed){
+ if(!filtersAccordion)return;
+ filtersAccordion.classList.toggle("collapsed",collapsed);
+ if(filtersToggle){
+  filtersToggle.setAttribute("aria-expanded",!collapsed);
+  filtersToggle.title=collapsed?"Розгорнути фільтри":"Згорнути фільтри";
+ }
+}
+
+if(filtersToggle){
+ filtersToggle.onclick=()=>{
+  const isCollapsed=filtersAccordion.classList.contains("collapsed");
+  setFiltersCollapsed(!isCollapsed);
+ };
+}
+
+if(isMobile()){
+ setFiltersCollapsed(true);
+}
+
+toggle.onclick=()=>isMobile()?setMobile(false):setDesktop(!panel.classList.contains("collapsed"));
+mobileBtn.onclick=()=>setMobile(!panel.classList.contains("mobile-open"));
+search.oninput=applyFilters;
+clearBtn.onclick=()=>{search.value="";search.focus();applyFilters()};
+resetBtn.onclick=resetFilters;
+attachGroup(typeBox);
+
+addEventListener("resize",()=>{
+ if(isMobile()){panel.classList.remove("collapsed");setMobile(panel.classList.contains("mobile-open"))}
+ else{panel.classList.remove("mobile-open");setDesktop(panel.classList.contains("collapsed"))}
+ map.resize();
+});
+
+map.on("click",()=>{
+ if(isLayerClick){
+  isLayerClick=false;
+  return;
+ }
+ clearHoverHalo();
+ clearRoadSelection();
+ clearClickedActiveFeature();
+ clearMapListSelection();
+ if(activePopup){
+  activePopup.remove();
+  activePopup=null;
+ }
+ pinned=false;
+ activePopupFeatureId=null;
+});
+
+map.on("load",()=>{
+ fetch("./roads.geojson").then(r=>{if(!r.ok)throw new Error(`GeoJSON: HTTP ${r.status}`);return r.json()}).then(data=>{
+  let totalBounds=null;
+  data.features.forEach((f,idx)=>{
+   f.id=idx;
+   f.properties=f.properties||{};
+   f.properties._id=idx;
+   f.properties.road_key=key(f.properties);
+   f.properties.road_code=code(f.properties);
+   f.properties.road_type=type(f.properties);
+   f.properties.road_name=name(f.properties);
+   f._bounds=computeBounds(f.geometry);
+   if(f._bounds){
+    totalBounds=totalBounds?[
+     Math.min(totalBounds[0],f._bounds[0]),
+     Math.min(totalBounds[1],f._bounds[1]),
+     Math.max(totalBounds[2],f._bounds[2]),
+     Math.max(totalBounds[3],f._bounds[3])
+    ]:[...f._bounds];
+   }
+   featuresMap.set(idx,f);
+  });
+
+  allFeatures=data.features;
+  currentFeatures=allFeatures;
+
+  const cats=[...new Set(allFeatures.map(f=>f.properties.category).filter(v=>v!==null&&v!==undefined&&v!=="").map(String))];
+  const order=["I","II","III","IV","V"];cats.sort((a,b)=>order.indexOf(a)-order.indexOf(b));
+  const lanes=[...new Set(allFeatures.map(f=>f.properties.lanes_total).filter(v=>v!==null&&v!==undefined&&v!=="").map(Number).filter(Number.isFinite))].sort((a,b)=>a-b);
+  const sourcesMap=new Map();
+  const yearsList=[];
+  allFeatures.forEach(f=>{
+   const s=f.properties.source_system;
+   if(s)sourcesMap.set(s,(sourcesMap.get(s)||0)+1);
+   const d=f.properties.source_date;
+   if(d){
+    const y=parseInt(String(d).slice(0,4),10);
+    if(Number.isFinite(y))yearsList.push(y);
+   }
+  });
+  const sources=[...sourcesMap.keys()].sort((a,b)=>sourcesMap.get(b)-sourcesMap.get(a));
+  createGroup(catBox,cats);
+  createGroup(laneBox,lanes);
+  createGroup(sourceBox,sources);
+  if(yearsList.length>0){
+   initDateSlider(Math.min(...yearsList),Math.max(...yearsList));
+  }else{
+   initDateSlider(2011,2026);
+  }
+
+  map.addSource("roads",{
+   type:"geojson",
+   data:{
+    type:"FeatureCollection",
+    features:allFeatures
+   }
+  });
+
+  // Selected road halos (10px black, 7px white)
+  map.addLayer({
+   id:"roads-selected-halo-outer",
+   type:"line",
+   source:"roads",
+   filter:["==","road_key",""],
+   layout:{"line-cap":"round","line-join":"round"},
+   paint:{
+    "line-color":"#111111",
+    "line-width":10,
+    "line-opacity":0.95
+   }
+  });
+
+  map.addLayer({
+   id:"roads-selected-halo-inner",
+   type:"line",
+   source:"roads",
+   filter:["==","road_key",""],
+   layout:{"line-cap":"round","line-join":"round"},
+   paint:{
+    "line-color":"#ffffff",
+    "line-width":7,
+    "line-opacity":0.95
+   }
+  });
+
+  // Clicked segment halos (10px black, 7px white)
+  map.addLayer({
+   id:"roads-clicked-halo-outer",
+   type:"line",
+   source:"roads",
+   filter:["==","_id",-1],
+   layout:{"line-cap":"round","line-join":"round"},
+   paint:{
+    "line-color":"#111111",
+    "line-width":10,
+    "line-opacity":0.95
+   }
+  });
+
+  map.addLayer({
+   id:"roads-clicked-halo-inner",
+   type:"line",
+   source:"roads",
+   filter:["==","_id",-1],
+   layout:{"line-cap":"round","line-join":"round"},
+   paint:{
+    "line-color":"#ffffff",
+    "line-width":7,
+    "line-opacity":0.95
+   }
+  });
+
+  // Hover segment halos (13px black, 8px white - clearly visible above selected road)
+  map.addLayer({
+   id:"roads-hover-halo-outer",
+   type:"line",
+   source:"roads",
+   filter:["==","_id",-1],
+   layout:{"line-cap":"round","line-join":"round"},
+   paint:{
+    "line-color":"#111111",
+    "line-width":13,
+    "line-opacity":0.95
+   }
+  });
+
+  map.addLayer({
+   id:"roads-hover-halo-inner",
+   type:"line",
+   source:"roads",
+   filter:["==","_id",-1],
+   layout:{"line-cap":"round","line-join":"round"},
+   paint:{
+    "line-color":"#ffffff",
+    "line-width":8,
+    "line-opacity":0.95
+   }
+  });
+
+  // Main colored road line (4px, category color)
+  map.addLayer({
+   id:"roads-line",
+   type:"line",
+   source:"roads",
+   layout:{"line-cap":"round","line-join":"round"},
+   paint:{
+    "line-color":[
+     "match",
+     ["get","category"],
+     "I",colors.I,
+     "II",colors.II,
+     "III",colors.III,
+     "IV",colors.IV,
+     "V",colors.V,
+     "#666666"
+    ],
+    "line-width":4,
+    "line-opacity":0.9
+   }
+  });
+
+  // Invisible hit target (16px) for comfortable clicking & hovering
+  map.addLayer({
+   id:"roads-hit-target",
+   type:"line",
+   source:"roads",
+   layout:{"line-cap":"round","line-join":"round"},
+   paint:{
+    "line-color":"#000000",
+    "line-width":16,
+    "line-opacity":0
+   }
+  });
+
+  map.on("mousemove","roads-hit-target",e=>{
+   map.getCanvas().style.cursor="pointer";
+   const feature=e.features?.[0];
+   if(!feature)return;
+
+   const id=feature.properties._id;
+   if(clickedActiveFeatureId!==id){
+    showHoverHalo(id);
+   }else{
+    clearHoverHalo();
+   }
+
+   if(!pinned){
+    openRoadPopup(feature,e.lngLat,false);
+   }else if(activePopup&&!pinned&&activePopupFeatureId===id){
+    activePopup.setLngLat(e.lngLat);
+   }
+  });
+
+  map.on("mouseleave","roads-hit-target",()=>{
+   map.getCanvas().style.cursor="";
+   clearHoverHalo();
+   setTimeout(()=>{
+    if(!pinned&&activePopup&&!isPopupHovered){
+     closeActivePopup();
+    }
+   },60);
+  });
+
+  map.on("click","roads-hit-target",e=>{
+   isLayerClick=true;
+   const feature=e.features?.[0];
+   if(!feature)return;
+
+   const id=feature.properties._id;
+   clearHoverHalo();
+   clearRoadSelection();
+   setClickedActiveFeature(id);
+   selectListItemFromMap(feature.properties.road_key);
+   openRoadPopup(feature,e.lngLat,true);
+  });
+
+  if(totalBounds){
+   map.fitBounds([
+    [totalBounds[0],totalBounds[1]],
+    [totalBounds[2],totalBounds[3]]
+   ],{padding:20});
+  }
+
+  renderList(allFeatures);
+ }).catch(err=>{
+  console.error(err);
+  document.getElementById("map-title").textContent="Не вдалося завантажити roads.geojson";
+ });
+});
+</script>
+</body>
+</html>

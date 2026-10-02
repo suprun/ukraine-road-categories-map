@@ -1,0 +1,14 @@
+# Windows
+desktop.ini
+Thumbs.db
+ehthumbs.db
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+
+# IDE / Editors
+.vscode/
+.idea/
+*.swp
+*~

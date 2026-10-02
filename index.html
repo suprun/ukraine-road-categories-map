@@ -142,9 +142,11 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .panel-link span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .list-head{display:flex;justify-content:space-between;gap:10px;padding:10px 12px 8px;border-bottom:1px solid #ededed;color:#555;font-size:11px}
 .road-list{min-height:0;flex:1;overflow-y:auto;margin:0;padding:0;list-style:none;scrollbar-width:thin;scroll-behavior:auto}
-.road-item{width:100%;display:block;padding:9px 12px;border:0;border-bottom:1px solid #eee;background:#fff;text-align:left;color:#111;cursor:pointer}
+.road-item{width:100%;display:flex;align-items:stretch;border-bottom:1px solid #eee;background:#fff;color:#111}
 .road-item:hover{background:#f5f5f5}
 .road-item.is-selected{background:#e8e8e8}
+.road-item-main{min-width:0;flex:1;display:block;padding:9px 6px 9px 12px;border:0;background:transparent;text-align:left;color:inherit;cursor:pointer}
+.road-item-main:focus-visible,.road-item-source-btn:focus-visible{outline:2px solid #111;outline-offset:-2px}
 .road-item-top{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:3px}
 .road-code{flex:0 0 auto;font-size:12px;font-weight:600}
 .road-badges{min-width:0;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
@@ -174,6 +176,9 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .road-badge.source{height:auto;min-height:19px;padding:2px 7px;border-radius:6px;border:1px solid #d0d7de;background:#f6f8fa;color:#24292f;font-size:10px;font-weight:600;line-height:1.25;white-space:normal;word-break:break-word}
 .road-badge.date{height:19px;padding:0 6px;border-radius:999px;border:1px solid #d4d4d4;background:#fff;color:#555;font-size:10px;font-weight:500;line-height:1;white-space:nowrap}
 .road-badge.date svg{width:10px;height:10px;stroke-width:1.8;color:#777}
+.road-item-source-btn{width:32px;height:32px;flex:0 0 32px;align-self:center;display:flex;align-items:center;justify-content:center;margin:0 10px 0 4px;border:1px solid #c8c8c8;border-radius:7px;background:#fff;color:#333;text-decoration:none}
+.road-item-source-btn:hover{border-color:#999;background:#f5f5f5;color:#111}
+.road-item-source-btn svg{width:15px;height:15px;stroke-width:2}
 .popup-source-doc{font-size:11px;font-weight:400;line-height:1.35;color:#475569;font-style:italic;margin-top:3px;word-break:break-word}
 .popup-source-btn{height:36px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border:1px solid #d0d0d0;border-radius:7px;background:#fff;color:#111!important;text-decoration:none;font-size:12px;font-weight:500;transition:background .15s ease,border-color .15s ease;margin-top:8px}
 .popup-source-btn:hover{background:#f5f5f5;border-color:#aaa;color:#111!important}
@@ -404,6 +409,22 @@ function type(p={}){const c=String(code(p)).trim().toUpperCase()[0];if(c==="М"|
 function laneIcon(){
  return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M17 4v16M12 4v3M12 10v4M12 17v3"></path></svg>';
 }
+function calendarIcon(){
+ return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+}
+function externalLinkIcon(){
+ return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5"></path><path d="M10 14L19 5"></path><path d="M19 13v6H5V5h6"></path></svg>';
+}
+const lengthFormatter=new Intl.NumberFormat("uk-UA",{maximumFractionDigits:3});
+function formatLengthKm(value){
+ return lengthFormatter.format(Math.round(value*1000)/1000);
+}
+function sourceDateSortValue(value){
+ const match=String(value??"").match(/\d{4}(?:-\d{2}(?:-\d{2})?)?/);
+ if(!match)return Number.NEGATIVE_INFINITY;
+ const parts=match[0].split("-").map(Number);
+ return Date.UTC(parts[0],(parts[1]||1)-1,parts[2]||1);
+}
 function categoryColor(category){return colors[category]||"#666"}
 
 function extendBounds(bounds,coord){
@@ -540,7 +561,7 @@ function popupHTML(p={}){
   const sysBadge=p.source_system?`<span class="road-badge source">${esc(p.source_system)}</span>`:"";
   const dateBadge=p.source_date?`
    <span class="road-badge date">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+    ${calendarIcon()}
     <span>${esc(p.source_date)}</span>
    </span>`:"";
   const badges=(sysBadge||dateBadge)?`<div class="popup-source-badges">${sysBadge}${dateBadge}</div>`:"";
@@ -551,7 +572,7 @@ function popupHTML(p={}){
   const sbtn=p.source_url?`
    <a class="popup-source-btn" href="${esc(p.source_url)}" target="_blank" rel="noopener noreferrer" title="Відкрити першоджерело у новій вкладці">
     <span>Перейти до джерела</span>
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5"></path><path d="M10 14L19 5"></path><path d="M19 13v6H5V5h6"></path></svg>
+    ${externalLinkIcon()}
    </a>`:"" ;
 
   sourceBlock=`
@@ -807,10 +828,13 @@ function visibleRoads(features){
    code:code(p),
    name:name(p),
    features:[],
-   bounds:null,
-   categories:new Set(),
-   lanes:new Set()
-  });
+    bounds:null,
+    categories:new Set(),
+    lanes:new Set(),
+    lengthKm:0,
+    hasLength:false,
+    source:null
+   });
   const road=m.get(k);
   road.features.push(f);
   if(f._bounds){
@@ -823,6 +847,23 @@ function visibleRoads(features){
   }
   if(p.category!==null&&p.category!==undefined&&p.category!=="")road.categories.add(String(p.category));
   if(p.lanes_total!==null&&p.lanes_total!==undefined&&p.lanes_total!=="")road.lanes.add(Number(p.lanes_total));
+  const hasLength=p.length_km!==null&&p.length_km!==undefined&&p.length_km!=="";
+  const lengthKm=Number(p.length_km);
+  if(hasLength&&Number.isFinite(lengthKm)){
+   road.lengthKm+=lengthKm;
+   road.hasLength=true;
+  }
+  if(p.source_date||p.source_url){
+   const candidate={
+    date:p.source_date||"",
+    url:p.source_url||"",
+    title:p.source_title||p.source_system||"",
+    sortValue:sourceDateSortValue(p.source_date)
+   };
+   if(!road.source||candidate.sortValue>road.source.sortValue||(candidate.sortValue===road.source.sortValue&&candidate.url&&!road.source.url)){
+    road.source=candidate;
+   }
+  }
  });
  const order=["I","II","III","IV","V"];
  return [...m.values()].map(road=>{
@@ -838,24 +879,27 @@ function renderList(features){
  if(!roads.length){const li=document.createElement("li");li.className="empty";li.textContent="За вибраними умовами доріг не знайдено.";list.append(li);return}
  const frag=document.createDocumentFragment();
  roads.forEach(r=>{
-  const li=document.createElement("li"),b=document.createElement("button");
+  const li=document.createElement("li"),card=document.createElement("div"),b=document.createElement("button");
   const categoryBadges=r.categories.map(category=>
    `<span class="road-badge category" style="background:${categoryColor(category)}">${esc(category)}</span>`
   ).join("");
   const laneBadges=r.lanes.map(lanes=>
    `<span class="road-badge lanes">${laneIcon()}<span>${esc(lanes)}</span></span>`
   ).join("");
+  const lengthBadge=r.hasLength?`<span class="road-badge length">${esc(formatLengthKm(r.lengthKm))} км</span>`:"";
+  const dateBadge=r.source?.date?`<span class="road-badge date">${calendarIcon()}<span>${esc(r.source.date)}</span></span>`:"";
 
+  card.className="road-item"+((selectedRoadKey===r.key||mapSelectedRoadKey===r.key)?" is-selected":"");
   b.type="button";
-  b.className="road-item"+((selectedRoadKey===r.key||mapSelectedRoadKey===r.key)?" is-selected":"");
+  b.className="road-item-main";
   b.innerHTML=`
    <span class="road-item-top">
     <span class="road-code">${esc(r.code)}</span>
-    <span class="road-badges">${categoryBadges}${laneBadges}</span>
+    <span class="road-badges">${categoryBadges}${laneBadges}${lengthBadge}${dateBadge}</span>
    </span>
    <span class="road-name">${esc(r.name||"Без назви")}</span>`;
 
-  roadListItems.set(r.key,b);
+  roadListItems.set(r.key,card);
 
   b.onclick=()=>{
    closeActivePopup();
@@ -863,7 +907,7 @@ function renderList(features){
    clearMapListSelection();
 
    selectRoad(r);
-   b.classList.add("is-selected");
+   card.classList.add("is-selected");
 
    if(r.bounds){
     map.fitBounds([
@@ -876,7 +920,19 @@ function renderList(features){
    }
    if(isMobile())setMobile(false);
   };
-  li.append(b);frag.append(li);
+  card.append(b);
+  if(r.source?.url){
+   const sourceLink=document.createElement("a");
+   sourceLink.className="road-item-source-btn";
+   sourceLink.href=r.source.url;
+   sourceLink.target="_blank";
+   sourceLink.rel="noopener noreferrer";
+   sourceLink.title=r.source.title?`Відкрити джерело: ${r.source.title}`:"Відкрити джерело у новій вкладці";
+   sourceLink.setAttribute("aria-label",`Відкрити джерело для ${r.code} у новій вкладці`);
+   sourceLink.innerHTML=externalLinkIcon();
+   card.append(sourceLink);
+  }
+  li.append(card);frag.append(li);
  });
  list.append(frag);
 }

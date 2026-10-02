@@ -393,6 +393,9 @@ const isMobile=()=>matchMedia("(max-width:760px)").matches;
 
 function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function val(v){return v===null||v===undefined||v===""?"—":esc(v)}
+function categoryStatusLabel(v){
+ return v==="stated_existing_or_project_section"?"Зазначено для існуючої або проєктної ділянки":v;
+}
 function code(p={}){return p.current_road_code||p.road_code||"Дорога"}
 function name(p={}){return p.current_road_name||p.road_name||""}
 function key(p={}){return `${code(p)}|||${name(p)}`}
@@ -530,7 +533,7 @@ function popupHTML(p={}){
  }
  const catBadge=p.category?`<span class="road-badge category" style="background:${categoryColor(p.category)}">Категорія ${esc(p.category)}</span>`:"";
  const lengthBadge=p.length_km?`<span class="road-badge length">${esc(p.length_km)} км</span>`:"";
- const statusRow=p.category_status?`<div class="popup-row"><span class="popup-label">Статус</span><span class="popup-value">${val(p.category_status)}</span></div>`:"";
+ const statusRow=p.category_status?`<div class="popup-row"><span class="popup-label">Статус</span><span class="popup-value">${val(categoryStatusLabel(p.category_status))}</span></div>`:"";
 
  let sourceBlock="";
  if(p.source_system||p.source_title||p.source_url||p.source_date){

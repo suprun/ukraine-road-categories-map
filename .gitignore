@@ -13,8 +13,11 @@ $RECYCLE.BIN/
 *.swp
 *~
 
+.env
+
 # specific files
 Кілометрові стовпи-20261002T133249Z-1-001.zip
 Кілометрові стовпи-20261002T133249Z-1-001/
 scripts/build_kilometer_post_geojson.py
 tests/test_build_kilometer_post_geojson.py
+fix-git.ps1
